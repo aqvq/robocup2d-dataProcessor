@@ -1,6 +1,7 @@
 """
-读 json 文件, 写入 Mongo 中
-并把json文件的文件名作为集合名
+ Json2MongoDB
+ written by shang at 2022年9月15日
+ 读json文件, 写入Mongo中并把json文件的文件名作为集合名
 """
 
 from loguru import logger
@@ -58,7 +59,7 @@ class Json2MongoDB:
         self.configPath = configPath
         self.successCount = 0
         self.failCount = 0
-        with open(self.configPath, encoding='utf-8') as f:
+        with open(self.configPath, 'r', encoding='utf-8') as f:
             self.config = yaml.safe_load(f)
         logger.add(self.config['log']['output'],
                    rotation=self.config['log']['rotation'],
@@ -84,7 +85,7 @@ class Json2MongoDB:
         if collection.estimated_document_count() > 0:
             # logger.debug("文件已存在: {}".format(file))
             return
-        with open(file, "r") as json_file:
+        with open(file, "r", encoding='utf-8') as json_file:
             json_file.readline()  # 过滤首行
             try:
                 records = json.load(json_file)

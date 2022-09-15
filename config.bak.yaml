@@ -41,6 +41,6 @@ log:
   # 输出日志文件名
   output: log.txt
   # 转储规则（留空为禁用）
-  rotation:
+  rotation: 
   # 延迟删除规则（留空为禁用）
   retention: 1 week
