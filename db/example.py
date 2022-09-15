@@ -1,6 +1,6 @@
 import pymongo
 
-mongo_client = pymongo.MongoClient('172.19.96.1', 27017)
+mongo_client = pymongo.MongoClient('127.0.0.1', 27017)
 print("连接成功" if mongo_client.server_info() else "连接失败")  # 判断是否连接成功
 mongo_db = mongo_client['Robocup']
 mongo_collection = mongo_db['test']

@@ -1,0 +1,46 @@
+# DCC config file
+# written by shang at 2022年9月15日
+#
+# MongoDB配置信息
+mongodb:
+  # 主机ip地址
+  host: localhost
+  # 主机端口号
+  port: 27017
+  # 数据库名称
+  database: Robocup
+  # 是否需要验证
+  # 如果需要验证，请输入用户名和密码
+  auth: false
+  # 用户名
+  username:
+  # 密码
+  password:
+#
+# 主要配置信息
+scan:
+  # 扫描监听文件（夹）
+  # 可指定多个文件或文件夹
+  source:
+    -
+  # 处理出错的日志文件
+  # 选项：
+  # file：跳过出错的文件，不导入该文件
+  # line：删除出错的行，继续尝试导入该文件
+  # none：直接抛出异常
+  skip: line
+  # 完成一边扫描后的停止间隔时间，以秒为单位
+  interval: 600
+#
+# 输出日志文件配置信息
+log:
+  # 输出日志等级
+  # 选项（不区分大小写）：
+  # DEBUG/INFO/WARNING/ERROR/CRITICAL
+  level: INFO
+  # 输出日志文件名
+  output: log.txt
+  # 转储规则（留空为禁用）
+  rotation:
+  # 延迟删除规则（留空为禁用）
+  retention: 1 week
