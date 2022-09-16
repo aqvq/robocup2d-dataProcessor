@@ -59,27 +59,21 @@ class Json2MongoDB:
         self.configPath = configPath
         self.successCount = 0
         self.failCount = 0
+        self.client = None
+        self.ignoreList = ['incomplete']
         with open(self.configPath, 'r', encoding='utf-8') as f:
             self.config = yaml.safe_load(f)
         logger.add(self.config['log']['output'],
                    rotation=self.config['log']['rotation'],
                    retention=self.config['log']['retention'],
                    level=self.config['log']['level'].upper())
-        if self.config['mongodb']['auth']:
-            self.client = MongoClient(self.config['mongodb']['host'],
-                                      self.config['mongodb']['port'],
-                                      username=self.config['mongodb']['username'],
-                                      password=self.config['mongodb']['password'],
-                                      authSource=self.config['mongodb']['database'])
-        else:
-            self.client = MongoClient(self.config['mongodb']['host'],
-                                      self.config['mongodb']['port'])
+        # logger.debug(self.config)
 
     def importJsonFileToMongo(self, file):
         # logger.debug("正在处理文件: {}".format(file))
         filename = os.path.basename(file)[:-4]
         collection = self.client.get_database(self.config['mongodb']['database']).get_collection(filename)
-        if filename == 'incomplete':
+        if filename in self.ignoreList:
             logger.info("跳过: {}".format(file))
             return
         if collection.estimated_document_count() > 0:
@@ -105,6 +99,8 @@ class Json2MongoDB:
                         self.importJsonFileToMongo(file)
                     else:
                         self.failCount += 1
+                        if self.config['scan']['error'].lower() == 'ignore':
+                            self.ignoreList.append(filename)
                         logger.error("无法修复: {}".format(file))
                     return
                 else:
@@ -130,15 +126,43 @@ class Json2MongoDB:
 
     def execute(self):
         # logger.debug("CONFIG: {}".format(self.config))
+        if self.config['mongodb']['auth']:
+            self.client = MongoClient(self.config['mongodb']['host'],
+                                      self.config['mongodb']['port'],
+                                      username=self.config['mongodb']['username'],
+                                      password=self.config['mongodb']['password'],
+                                      authSource=self.config['mongodb']['database'])
+        else:
+            self.client = MongoClient(self.config['mongodb']['host'],
+                                      self.config['mongodb']['port'])
 
         while True:
             startTime = time.time()
             self.successCount = 0
             self.failCount = 0
             self.importJsonToMongo(self.config['scan']['source'])
-            logger.info(
-                "所有任务已完成 (成功: {}, 失败: {}, 用时: {}), 等待新的任务中...".format(
-                    self.successCount,
-                    self.failCount,
-                    formatTime(time.time() - startTime)))
-            sleep(self.config['scan']['interval'])
+
+            if self.config['scan']['interval'] < 0:
+                logger.info(
+                    "所有任务已完成 (成功: {}, 失败: {}, 用时: {})".format(
+                        self.successCount,
+                        self.failCount,
+                        formatTime(time.time() - startTime)))
+                break
+            else:
+                logger.info(
+                    "所有任务已完成 (成功: {}, 失败: {}, 用时: {}), 等待新的任务中...".format(
+                        self.successCount,
+                        self.failCount,
+                        formatTime(time.time() - startTime)))
+                sleep(self.config['scan']['interval'])
+        # self.stop() # 不要手动调用此函数
+
+    def stop(self):
+        # logger.debug("Stop json2mongo")
+        self.client.close()
+        self.client = None
+        self.ignoreList = ['incomplete']
+
+    def __del__(self):
+        self.stop()
